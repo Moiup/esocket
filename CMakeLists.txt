@@ -3,11 +3,11 @@ cmake_minimum_required(VERSION 3.20.0)
 project(ESocket)
 
 file(GLOB_RECURSE HEADERS
-    *.h
+    inc/*.h
 )
 
 file(GLOB_RECURSE SRC
-    *.cpp
+    src/*.cpp
 )
 
 add_library(ESocket ${SRC} ${HEADERS})
