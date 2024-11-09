@@ -1,4 +1,4 @@
-#include "EStream.h"
+#include "../inc/EStream.h"
 
 EStream::EStream() :
 	_esocket{}

@@ -1,4 +1,4 @@
-#include "EServerSocket.h"
+#include "../inc/EServerSocket.h"
 
 EServerSocket::EServerSocket() :
 	_socket{},
