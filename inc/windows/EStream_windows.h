@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ESocket.h"
+#include "../ESocket.h"
 #include <vector>
 
 class EStream
@@ -13,8 +13,11 @@ private:
 public:
 	EStream();
 	EStream(ESocket& es);
+	EStream(EStream&& stream);
 	// EStream(EStream&& stream);
 	~EStream();
+
+	EStream& operator=(EStream&& stream);
 
 	// Buf size is the size of the buffer to read.
 	// Read size is the real number of bytes read.

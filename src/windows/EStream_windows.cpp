@@ -10,9 +10,18 @@ EStream::EStream(ESocket& es){
     SetESocket(es);
 }
 
+EStream::EStream(EStream&& stream) {
+	*this = std::move(stream);
+}
 
 EStream::~EStream() {
     Close();
+}
+
+EStream& EStream::operator=(EStream&& stream) {
+	_esocket = std::move(stream)._esocket;
+	stream._esocket = nullptr;
+	return *this;
 }
 
 uint32_t EStream::Recv(uint32_t buf_size, char* buf) {
@@ -53,12 +62,11 @@ INT32 EStream::Send_test(SOCKET s, char* buf, uint32_t size) {
 INT32 EStream::Close() {
 	INT32 i_result{};
 
-	//if (_esocket == nullptr)
-	//	return 0;
-
-	i_result = shutdown(_esocket->GetSocket(), SD_SEND);
-	if (i_result == SOCKET_ERROR) {
-		std::cerr << "shutdown failed." << std::endl;
+	if (_esocket) {
+		i_result = shutdown(_esocket->GetSocket(), SD_SEND);
+		if (i_result == SOCKET_ERROR) {
+			std::cerr << "shutdown failed." << std::endl;
+		}
 	}
 
 	return i_result;

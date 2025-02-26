@@ -18,6 +18,61 @@ EServerSocket::~EServerSocket() {
 	WSACleanup();
 }
 
+EStream EServerSocket::Connect() {
+	EStream client_stream{};
+	INT32 i_result{};
+	WSADATA wsa_data{};
+	struct addrinfo hints {};
+	struct addrinfo* result;
+
+	i_result = WSAStartup(MAKEWORD(2, 2), &wsa_data);
+	if (i_result != 0) {
+		std::cout << "WSAStartup failed: " << i_result << std::endl;
+		return client_stream;
+	}
+
+	ZeroMemory(&hints, sizeof(hints));
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = IPPROTO_TCP;
+	hints.ai_flags = AI_PASSIVE;
+
+	i_result = getaddrinfo(_address.c_str(), _port.c_str(), &hints, &result);
+	if (i_result != 0) {
+		std::cout << "getaddrinfo failed: " << i_result << std::endl;
+		WSACleanup();
+		return client_stream;
+	}
+
+	_socket.SetSocket(
+		socket(
+			result->ai_family,
+			result->ai_socktype,
+			result->ai_protocol
+		)
+	);
+	if (_socket.GetSocket() == INVALID_SOCKET) {
+		std::cout << "Error creating server socket :" << WSAGetLastError() << std::endl;
+		freeaddrinfo(result);
+		WSACleanup();
+		return client_stream;
+	}
+
+	i_result = connect(_socket.GetSocket(), result->ai_addr, (int)(result->ai_addrlen));
+	client_stream.SetESocket(_socket);
+	freeaddrinfo(result);
+	result = nullptr;
+
+	if (i_result == SOCKET_ERROR) {
+		std::cout << "Connection failed : " << WSAGetLastError() << std::endl;
+		_socket.Close();
+		WSACleanup();
+		return {};
+	}
+
+	return client_stream;
+}
+
 INT32 EServerSocket::Bind() {
 	INT32 i_result{};
 	WSADATA wsa_data{};
@@ -52,13 +107,13 @@ INT32 EServerSocket::Bind() {
 	);
 	if (_socket.GetSocket() == INVALID_SOCKET) {
 		std::cout << "Error creating server socket :" << WSAGetLastError() << std::endl;
-		freeaddrinfo(_result);
+		freeaddrinfo(result);
 		WSACleanup();
 		return WSAGetLastError();
 	}
 
 	i_result = bind(_socket.GetSocket(), result->ai_addr, (int)result->ai_addrlen);
-	freeaddrinfo(_result);
+	freeaddrinfo(result);
 
 
 	if (i_result == SOCKET_ERROR) {
@@ -69,26 +124,6 @@ INT32 EServerSocket::Bind() {
 	}
 
 	return i_result;
-}
-
-EStream EServerSocket::Connect() {
-	EStream client_stream{};
-	INT32 i_result{};
-
-	i_result = connect(_socket.GetSocket(), result->ai_addr, (int)(result->ai_addrlen));
-	client_stream.SetESocket(_socket);
-
-	freeaddrinfo(result);
-	result = nullptr;
-
-	if (i_result == SOCKET_ERROR) {
-		std::cout << "Connection failed : " << WSAGetLastError() << std::endl;
-		_socket.Close();
-		WSACleanup();
-		return {};
-	}
-
-	return client_stream;
 }
 
 INT32 EServerSocket::Listen() {
